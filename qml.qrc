@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>dictionary/dictionary.txt</file>
+    </qresource>
+    <qresource prefix="/dictionary"/>
+</RCC>
