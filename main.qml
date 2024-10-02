@@ -6,14 +6,17 @@ ApplicationWindow {
     visible: true
     width: 800
     height: 900
+    minimumWidth: 500
+    minimumHeight: 600
     title: "Wordle Game"
     color: "#FFF5E1"
 
+    property real scaleFactor: Math.min(width / 800, height / 900)
     // Bind to C++ GameLogic properties
-    property var gridData: gameLogic.grid
-    property int currentRow: gameLogic.currentRow
-    property int currentCol: gameLogic.currentCol
-    property string targetWord: gameLogic.targetWord
+    property var gridData: gameLogic ? gameLogic.grid : []
+    property int currentRow: gameLogic ? gameLogic.currentRow : 0
+    property int currentCol: gameLogic ? gameLogic.currentCol : 0
+    property string targetWord: gameLogic ? gameLogic.targetWord : ""
 
     // List to hold the status of each grid cell
     property var statusData: []
@@ -57,7 +60,7 @@ ApplicationWindow {
 
     // Function to handle key input
     function handleKeyInput(key) {
-
+        //console.log("Key pressed:", key)
         if (gameOverFlag) {
             return
             // Ignore further input if game is over
@@ -99,14 +102,14 @@ ApplicationWindow {
         columns: 5
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 5
-        anchors.topMargin: 30
+        spacing: 5 * scaleFactor
+        anchors.topMargin: 30 * scaleFactor
 
         Repeater {
             model: 6 * 5
             Rectangle {
-                width: 70
-                height: 70
+                width: 70 * scaleFactor
+                height: 70 * scaleFactor
                 color: {
                     switch (statusData[index]) {
                     case "correct":
@@ -123,8 +126,8 @@ ApplicationWindow {
 
                 Text {
                     anchors.centerIn: parent
-                    text: gridData[index]
-                    font.pixelSize: 32
+                    text: gridData[index] !== undefined ? gridData[index] : ""
+                    font.pixelSize: 32 * scaleFactor
                 }
             }
         }
@@ -134,24 +137,24 @@ ApplicationWindow {
         id: keyboard
         anchors.top: gameGrid.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 5
-        anchors.topMargin: 90
+        spacing: 5 * scaleFactor
+        anchors.topMargin: 90 * scaleFactor
 
         // Create the rows of keys
         Row {
-            spacing: 5
+            spacing: 5 * scaleFactor
             Repeater {
                 model: ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"]
                 Rectangle {
-                    width: 60
-                    height: 60
+                    width: 60 * scaleFactor
+                    height: 60 * scaleFactor
                     color: getKeyColor(modelData)
                     border.color: "black"
 
                     Text {
                         anchors.centerIn: parent
                         text: modelData
-                        font.pixelSize: 24
+                        font.pixelSize: 24 * scaleFactor
                     }
 
                     MouseArea {
@@ -163,19 +166,19 @@ ApplicationWindow {
         }
 
         Row {
-            spacing: 5
+            spacing: 5 * scaleFactor
             Repeater {
                 model: ["A", "S", "D", "F", "G", "H", "J", "K", "L"]
                 Rectangle {
-                    width: 60
-                    height: 60
+                    width: 60 * scaleFactor
+                    height: 60 * scaleFactor
                     color: getKeyColor(modelData)
                     border.color: "black"
 
                     Text {
                         anchors.centerIn: parent
                         text: modelData
-                        font.pixelSize: 24
+                        font.pixelSize: 24 * scaleFactor
                     }
 
                     MouseArea {
@@ -187,20 +190,20 @@ ApplicationWindow {
         }
 
         Row {
-            spacing: 5
+            spacing: 5 * scaleFactor
             Repeater {
                 model: ["Enter", "Z", "X", "C", "V", "B", "N", "M", "Backspace"]
                 Rectangle {
                     width: (modelData === "Enter"
-                            || modelData === "Backspace") ? 120 : 60
-                    height: 60
+                            || modelData === "Backspace") ? 120 * scaleFactor : 60 * scaleFactor
+                    height: 60 * scaleFactor
                     color: getKeyColor(modelData)
                     border.color: "black"
 
                     Text {
                         anchors.centerIn: parent
                         text: modelData
-                        font.pixelSize: 24
+                        font.pixelSize: 24 * scaleFactor
                     }
 
                     MouseArea {
@@ -225,49 +228,43 @@ ApplicationWindow {
         id: invalidGuessPopup
         modal: true
         focus: true
-        width: 250
-        height: 150
+        width: 250 * scaleFactor
+        height: 150 * scaleFactor
         z: 10
         anchors.centerIn: parent
 
         Rectangle {
             anchors.fill: parent
             color: "#FFE6E6"
-            radius: 10
+            radius: 10 * scaleFactor
             border.color: "#FF4C4C"
-            border.width: 2
+            border.width: 2 * scaleFactor
 
-            // Use a FocusScope to handle key events inside the Popup
-            FocusScope {
-                anchors.fill: parent
-                focus: true
+            Column {
+                anchors.centerIn: parent
+                spacing: 20 * scaleFactor
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 20
+                Text {
+                    text: "Not a valid word."
+                    font.pixelSize: 16 * scaleFactor
+                    wrapMode: Text.Wrap
+                }
 
-                    Text {
-                        text: "Not a valid word."
-                        font.pixelSize: 16
-                        wrapMode: Text.Wrap
+                Button {
+                    text: "OK"
+                    width: 40 * scaleFactor
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    onClicked: invalidGuessPopup.close()
+                    background: Rectangle {
+                        color: "#FF4C4C"
+                        radius: 5 * scaleFactor
                     }
 
-                    Button {
+                    contentItem: Text {
                         text: "OK"
-                        width: 40
+                        color: "black"
                         anchors.horizontalCenter: parent.horizontalCenter
-                        onClicked: invalidGuessPopup.close()
-                        background: Rectangle {
-                            color: "#FF4C4C"
-                            radius: 5
-                        }
-
-                        contentItem: Text {
-                            text: "OK"
-                            color: "black"
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            font.pixelSize: 16
-                        }
+                        font.pixelSize: 16 * scaleFactor
                     }
                 }
 
@@ -287,49 +284,43 @@ ApplicationWindow {
         id: shortGuessPopup
         modal: true
         focus: true
-        width: 300
-        height: 150
+        width: 300 * scaleFactor
+        height: 150 * scaleFactor
         z: 10
         anchors.centerIn: parent
 
         Rectangle {
             anchors.fill: parent
             color: "#FFFFE6"
-            radius: 10
+            radius: 10 * scaleFactor
             border.color: "#FFD700"
-            border.width: 2
+            border.width: 2 * scaleFactor
 
-            // Use a FocusScope to handle key events inside the Popup
-            FocusScope {
-                anchors.fill: parent
-                focus: true
+            Column {
+                anchors.centerIn: parent
+                spacing: 20 * scaleFactor
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 20
+                Text {
+                    text: "Word must be 5 letters!"
+                    font.pixelSize: 16 * scaleFactor
+                    wrapMode: Text.Wrap
+                }
 
-                    Text {
-                        text: "Word must be 5 letters!"
-                        font.pixelSize: 16
-                        wrapMode: Text.Wrap
+                Button {
+                    text: "OK"
+                    width: 40 * scaleFactor
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    onClicked: shortGuessPopup.close()
+                    background: Rectangle {
+                        color: "#FFD700"
+                        radius: 5 * scaleFactor
                     }
 
-                    Button {
+                    contentItem: Text {
                         text: "OK"
-                        width: 40
+                        color: "black"
                         anchors.horizontalCenter: parent.horizontalCenter
-                        onClicked: shortGuessPopup.close()
-                        background: Rectangle {
-                            color: "#FFD700"
-                            radius: 5
-                        }
-
-                        contentItem: Text {
-                            text: "OK"
-                            color: "black"
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            font.pixelSize: 16
-                        }
+                        font.pixelSize: 16 * scaleFactor
                     }
                 }
 
@@ -368,23 +359,23 @@ ApplicationWindow {
 
         anchors.top: gameGrid.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        spacing: 5
-        anchors.topMargin: 20
-        width: 120
-        height: 40
+        spacing: 5 * scaleFactor
+        anchors.topMargin: 20 * scaleFactor
+        width: 120 * scaleFactor
+        height: 40 * scaleFactor
 
         background: Rectangle {
             anchors.fill: parent
             color: "#C0EBA6"
-            radius: 8
+            radius: 8 * scaleFactor
             border.color: "#C0EBA6"
-            border.width: 2
+            border.width: 2 * scaleFactor
         }
 
         contentItem: Text {
             text: "New Game"
             color: "black"
-            font.pixelSize: 18
+            font.pixelSize: 18 * scaleFactor
             font.bold: true
             anchors.centerIn: parent
         }
@@ -407,7 +398,7 @@ ApplicationWindow {
         anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
         visible: false
-        font.pixelSize: 20
+        font.pixelSize: 20 * scaleFactor
         color: "blue"
     }
 
